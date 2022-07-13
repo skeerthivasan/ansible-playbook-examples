@@ -1,13 +1,6 @@
 ---
 - name: Update and install NFS client packages
   block:
-  - name: packages | Install updates using yum
-    yum:
-      name: "*"
-      state: latest
-      skip_broken: yes
-    ignore_errors: true
-
   - name: packages | Install NFS client packages on CentOS/RHEL
     yum:
       name: 
