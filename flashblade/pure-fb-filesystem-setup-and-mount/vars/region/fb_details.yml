@@ -1,0 +1,26 @@
+---
+array_inventory:               
+  FBServer1:
+    fb_host: 10.21.xxx.151   # FlashBlade Maganement IP
+    filesystem:
+      - { name: tools, size: 1G, type: nfsv3, nfs_rules: '10.21.xxx.0/24(rw)', policy: snap_daily } 
+    filesystem_snapshot: 
+      - { filesystem_name: tools, suffix: ansible }  # snap_name : tools.ansible
+    filesystem_snapshot_policy:
+      - { name: snap_daily, at: 11AM, keep_for: 86400, every: 86400, timezone: Asia/Shanghai } # optional params: timezone
+  FBServer2:
+    fb_host: 10.21.xxx.11   # FlashBlade Maganement IP
+    filesystem:
+      - { name: tools, size: 1G, type: nfsv3, nfs_rules: '10.21.xxx.0/24(rw)', policy: snap_daily }
+    filesystem_snapshot:
+      - { filesystem_name: tools, suffix: ansible }  # snap_name : tools.ansible
+    filesystem_snapshot_policy:
+      - { name: snap_daily, at: 11AM, keep_for: 86400, every: 86400, timezone: Asia/Shanghai } # optional params: timezone
+
+linux_client_mount:
+  mount1:
+    server: { fb_name: FBServer1, fileshare: tools_snap, datavip_name: data10 } 
+    client: { hosts: dc, mount_state: mount, mount_point: /mnt/tools, opts: "hard,rw,bg,tcp,timeo=600" }
+  mount2:
+    server: { fb_name: FBServer2, fileshare: tools_snap, datavip_name: NFS-10 } 
+    client: { hosts: dc, mount_state: mount, mount_point: /mnt/scratch, opts: "rw" }

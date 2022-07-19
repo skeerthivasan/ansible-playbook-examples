@@ -1,0 +1,65 @@
+---
+- name: Processing details file
+  hosts: 'localhost'
+  gather_facts: false
+  vars_files:
+  - "vars/{{ env }}/fb_details.yml"
+  tasks:
+    - set_fact:
+        data_vars: "{{ array_inventory|dict2items }}"
+
+    - set_fact:
+        inven: "{{ inven | default({}) | combine ({item.key: item.value.fb_host}) }}"
+        rven: "{{ rven | default({}) | combine ({item.value.fb_host: item.key}) }}"
+      with_items: "{{ data_vars }}"
+
+- name: Making FB Host group
+  hosts: localhost
+  connection: local
+  tasks:
+  - add_host:
+      name: "{{ item.value }}"
+      groups: fbgroup
+    with_items: "{{ inven|dict2items }}"
+
+- name: Fetching token for FB group
+  hosts: fbgroup
+  gather_facts: false
+  tasks:
+    - raw: "pureadmin list {{ ansible_user }} --notitle --api-token --expose --nvp"
+      register: data 
+
+    - set_fact:
+        token_dict: "{{ token_dict | default({}) | combine ({inventory_hostname: item.split('=')[1]}) }}"
+      when: item is match("API Token*")
+      with_items:
+        "{{ data.stdout_lines }}"
+
+- name: Secret Creation
+  hosts: localhost
+  connection: local
+  tasks:
+    - name: Consolidate result
+      set_fact:
+        con_map: "{{ con_map | default({}) | combine(item) }}"
+      loop: >-
+        {{
+          groups["fbgroup"]
+          | map("extract", hostvars)
+          | map(attribute="token_dict")
+          | list
+        }}
+
+    - name: Make Array dict
+      set_fact:
+        use_map: "{{ use_map | default({}) | combine({rven[item.key]: {'api_token': item.value}}) }}"
+      with_items: "{{ con_map|dict2items }}"
+
+    - name: Secret dict
+      set_fact:
+        secret_dict: "{{ secret_dict | default({}) | combine({'array_secrets': use_map}) }}"
+
+    - name: Copying it to file
+      copy:
+        content: "{{ secret_dict | to_nice_yaml(explicit_start=True) }}"
+        dest: "vars/{{ env }}/fb_secrets.yml"
