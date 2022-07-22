@@ -28,6 +28,15 @@
 
 - name: Fetching token for FB group
   hosts: fbgroup
+  vars_prompt:
+  - name: ansible_user
+    prompt: Enter FB username
+    unsafe: yes
+    private: yes
+  - name: ansible_password
+    prompt: Enter FB password
+    unsafe: yes
+    private: yes
   gather_facts: false
   vars:
     ansible_host_key_checking: false
