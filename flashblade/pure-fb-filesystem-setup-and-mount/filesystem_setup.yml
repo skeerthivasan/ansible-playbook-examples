@@ -1,9 +1,6 @@
 ---
 - name: Making FB secrets file
   import_playbook: token_create.yml
-  vars:
-    ansible_user: "{{ fb_user }}"
-    ansible_password: "{{ fb_pass }}"
 
 - name: FlashBlade filesystem setup
   hosts: "localhost"
