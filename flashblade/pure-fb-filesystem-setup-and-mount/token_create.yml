@@ -13,6 +13,10 @@
         rven: "{{ rven | default({}) | combine ({item.value.fb_host: item.key}) }}"
       with_items: "{{ data_vars }}"
 
+    - package:
+        name: "sshpass"
+        state: latest
+
 - name: Making FB Host group
   hosts: localhost
   connection: local
@@ -25,6 +29,8 @@
 - name: Fetching token for FB group
   hosts: fbgroup
   gather_facts: false
+  vars:
+    ansible_host_key_checking: false
   tasks:
     - raw: "pureadmin list {{ ansible_user }} --notitle --api-token --expose --nvp"
       register: data 
@@ -34,6 +40,7 @@
       when: item is match("API Token*")
       with_items:
         "{{ data.stdout_lines }}"
+      no_log: true
 
 - name: Secret Creation
   hosts: localhost
@@ -49,11 +56,13 @@
           | map(attribute="token_dict")
           | list
         }}
+      no_log: true
 
     - name: Make Array dict
       set_fact:
         use_map: "{{ use_map | default({}) | combine({rven[item.key]: {'api_token': item.value}}) }}"
       with_items: "{{ con_map|dict2items }}"
+      no_log: true
 
     - name: Secret dict
       set_fact:
