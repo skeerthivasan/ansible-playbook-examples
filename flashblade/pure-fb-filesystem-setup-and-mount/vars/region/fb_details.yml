@@ -3,7 +3,7 @@ array_inventory:
   FBServer1:
     fb_host: 10.21.xxx.151   # FlashBlade Maganement IP
     filesystem:
-      - { name: tools, size: 1G, type: nfsv3, nfs_rules: '10.21.xxx.0/24(rw)', policy: snap_daily } 
+      - { name: tools, size: 1G, type: nfsv3, nfs_rules: '*(rw,no_root_squash)', policy: snap_daily } 
     filesystem_snapshot: 
       - { filesystem_name: tools, suffix: ansible }  # snap_name : tools.ansible
     filesystem_snapshot_policy:
@@ -13,6 +13,3 @@ linux_client_mount:
   mount1:
     server: { fb_name: FBServer1, fileshare: tools, datavip_name: data10 } 
     client: { hosts: dc, mount_state: mount, mount_point: /mnt/tools, opts: "hard,rw,bg,tcp,timeo=600" }
-  mount2:
-    server: { fb_name: FBServer1, fileshare: tools, datavip_name: data11 } 
-    client: { hosts: dc, mount_state: mount, mount_point: /mnt/scratch, opts: "rw" }
